@@ -1,0 +1,3 @@
+condition,frames,angular_travel_deg,counterclockwise_spins,clockwise_spins,total_spins
+baseline,600,426.47,0,0,0
+stimulation,600,1081.63,3,0,3
