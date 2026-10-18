@@ -5,7 +5,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import torch
 
 TAU = 2 * math.pi
 REQUIRED = ("time_s", "nose_x", "nose_y", "neck_x", "neck_y",
@@ -55,15 +54,15 @@ def _impute_points(data: pd.DataFrame, threshold: float) -> pd.DataFrame:
 def head_orientation(data: pd.DataFrame, threshold: float = 0.9) -> pd.DataFrame:
     """Compute circular head angles and continuous unwrapped orientation."""
     clean = _impute_points(data, threshold)
-    nose = torch.as_tensor(clean[["nose_x", "nose_y"]].to_numpy(), dtype=torch.float64)
-    neck = torch.as_tensor(clean[["neck_x", "neck_y"]].to_numpy(), dtype=torch.float64)
+    nose = clean[["nose_x", "nose_y"]].to_numpy(dtype=float)
+    neck = clean[["neck_x", "neck_y"]].to_numpy(dtype=float)
     vector = nose - neck
-    phase = torch.atan2(vector[:, 1], vector[:, 0])
+    phase = np.arctan2(vector[:, 1], vector[:, 0])
     delta = phase[1:] - phase[:-1]
-    delta = torch.atan2(torch.sin(delta), torch.cos(delta))
-    continuous = torch.cat((phase[:1], phase[0] + torch.cumsum(delta, dim=0)))
-    clean["head_angle_deg"] = torch.rad2deg(phase).numpy()
-    clean["unwrapped_deg"] = torch.rad2deg(continuous).numpy()
+    delta = np.arctan2(np.sin(delta), np.cos(delta))
+    continuous = np.concatenate((phase[:1], phase[0] + np.cumsum(delta)))
+    clean["head_angle_deg"] = np.rad2deg(phase)
+    clean["unwrapped_deg"] = np.rad2deg(continuous)
     diff = np.diff(clean["unwrapped_deg"].to_numpy(), prepend=clean["unwrapped_deg"].iloc[0])
     dt = np.diff(clean["time_s"].to_numpy(), prepend=clean["time_s"].iloc[0])
     clean["angular_speed_deg_s"] = np.divide(diff, dt, out=np.zeros_like(diff),
